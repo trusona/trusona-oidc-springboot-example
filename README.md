@@ -13,7 +13,7 @@ Signup for a Trusona Developers account at https://developers.trusona.com/
 1. Checkout the project from Github
 1. Email `support@trusona.com` and let them know that you want to run this example. Include the email that is displayed when you log in to your Trusona Developers account.
 1. You'll receive an email back with your OIDC client ID
-1. Run `export OIDC_CLIENT_ID="<Your client ID>"`
+1. Edit `src/main/resources/application.properties` enter your client ID for the key `oidc.clientId`
 1. Run `./gradlew bootrun`
 1. Open a browser and navigate to `https://localhost:5001`
 1. Click the "Login with Trusona button" that you see on the screen
@@ -22,7 +22,3 @@ Signup for a Trusona Developers account at https://developers.trusona.com/
 1. Tap "Accept" in the Trusona App
 1. Now you've been redirected back to the example application running on your machine
 1. See the user information displayed on the screen that indicates a successful login
-
-## Technical Information
-
-
