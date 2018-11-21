@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trusona OpenID Connect Example</title>
+  <link type="text/css" rel="stylesheet" href="https://static.trusona.net/web-sdk/css/trusona.css">
+</head>
+<body>
+<div class="main">
+  {{#error}}
+  <div class="alert alert-danger" role="alert">
+    <p>There was an error with your login. Please try again.</p>
+  </div>
+  {{/error}}
+  <p><a id="login-button" class="trusona-no-passwords-login-button" href="#">Sign In</a></p>
+  <form id="oidc_form" class="form" action="{{authorizationEndpoint}}" method="POST">
+    <input type="hidden" name="scope" value="openid profile email" />
+    <input type="hidden" name="response_mode" value="form_post" />
+    <input type="hidden" name="response_type" value="id_token" />
+    <input type="hidden" name="client_id" value="{{clientId}}" />
+    <input type="hidden" name="redirect_uri" value="{{redirectUri}}" />
+    <input type="hidden" name="nonce" value="{{nonce}}" />
+    <input type="hidden" name="state" value="{{state}}" />
+  </form>
+  <script>
+    document.getElementById('login-button').onclick = function(e) {
+      e.preventDefault()
+      document.getElementById('oidc_form').submit()
+    }
+  </script>
+</div>
+</body>
+</html>
