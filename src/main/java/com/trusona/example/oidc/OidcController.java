@@ -33,9 +33,8 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/")
 public class OidcController {
 
-  public static final  String OIDC_RESPONSE = "/oidc_response";
-
-  private static final String OIDC_TEMPLATE    = "oidc";
+  private static final String OIDC_RESPONSE = "/oidc_response";
+  private static final String OIDC_TEMPLATE = "oidc";
   private static final String SUCCESS_TEMPLATE = "success";
 
   private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
@@ -54,6 +53,11 @@ public class OidcController {
   void initializeOidcConfiguration() {
     RestTemplate restTemplate = new RestTemplate();
     Map oidcDiscoveryConfig = restTemplate.getForObject(oidcConfig.getDiscoveryUrl(), Map.class);
+
+    if (oidcDiscoveryConfig == null) {
+      throw new IllegalStateException("missing discovery-url configuration");
+    }
+
     this.authorizationEndpoint = (String) oidcDiscoveryConfig.get(AUTHORIZATION_ENDPOINT);
     this.jwksUri = (String) oidcDiscoveryConfig.get(JWKS_URI);
   }
@@ -79,6 +83,7 @@ public class OidcController {
     return OIDC_TEMPLATE;
   }
 
+  @SuppressWarnings("unchecked")
   @RequestMapping(path = OIDC_RESPONSE, method = POST)
   String handleOidcResponse(@RequestParam("id_token") String idToken, Map<String, Object> model)
     throws ParseException, IOException, BadJOSEException, JOSEException {
