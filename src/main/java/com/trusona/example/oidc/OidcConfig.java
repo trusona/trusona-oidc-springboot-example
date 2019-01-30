@@ -20,7 +20,7 @@ public class OidcConfig {
   @NotBlank
   private String discoveryUrl;
 
-  public String getClientId() {
+  String getClientId() {
     return clientId;
   }
 
@@ -28,7 +28,7 @@ public class OidcConfig {
     this.clientId = clientId;
   }
 
-  public String getRedirectUri() {
+  String getRedirectUri() {
     return redirectUri;
   }
 
@@ -36,7 +36,7 @@ public class OidcConfig {
     this.redirectUri = redirectUri;
   }
 
-  public String getDiscoveryUrl() {
+  String getDiscoveryUrl() {
     return discoveryUrl;
   }
 
