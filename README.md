@@ -19,7 +19,7 @@ Signup for a Trusona Developers account at https://developers.trusona.com/
 
 ## Using the example
 
-1. Open a browser and navigate to `https://localhost:5001`
+1. Open a browser and navigate to [https://localhost:5001](https://localhost:5001)
 1. Click the "Login with Trusona button" that you see on the screen
 1. Open the Trusona App on your phone
 1. Now that you've been redirect to the Trusona Gateway, use the Trusona App to scan the QR code on your screen

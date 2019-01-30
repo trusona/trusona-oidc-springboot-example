@@ -3,7 +3,7 @@ package com.trusona.example.oidc;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
 public class TrusonaGatewayExample extends SpringBootServletInitializer {
@@ -16,4 +16,3 @@ public class TrusonaGatewayExample extends SpringBootServletInitializer {
     return builder.sources(TrusonaGatewayExample.class);
   }
 }
-
