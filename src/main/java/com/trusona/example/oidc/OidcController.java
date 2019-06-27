@@ -10,16 +10,20 @@ import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
-import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,16 +37,15 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/")
 public class OidcController {
 
+  private static final Logger logger = LoggerFactory.getLogger(OidcController.class);
+  private static final JWSAlgorithm JWS_ALGORITHM = JWSAlgorithm.RS256;
   private static final String OIDC_RESPONSE = "/oidc_response";
-  private static final String OIDC_TEMPLATE = "oidc";
   private static final String SUCCESS_TEMPLATE = "success";
+  private static final String OIDC_TEMPLATE = "oidc";
 
-  private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
-  private static final String JWKS_URI = "jwks_uri";
-
+  private JWKSource<SecurityContext> keySource;
   private final OidcConfig oidcConfig;
-  private String authorizationEndpoint;
-  private String jwksUri;
+  private URL authorizationEndpoint;
 
   @Autowired
   public OidcController(OidcConfig oidcConfig) {
@@ -50,56 +53,58 @@ public class OidcController {
   }
 
   @PostConstruct
-  void initializeOidcConfiguration() {
-    RestTemplate restTemplate = new RestTemplate();
-    Map oidcDiscoveryConfig = restTemplate.getForObject(oidcConfig.getDiscoveryUrl(), Map.class);
+  void initializeOidcConfiguration() throws MalformedURLException {
+    Map oidcDiscoveryConfig = Optional.ofNullable(new RestTemplate().getForObject(oidcConfig.getDiscoveryUrl(), Map.class))
+      .orElseThrow(() -> new IllegalStateException("missing discovery-url configuration"));
 
-    if (oidcDiscoveryConfig == null) {
-      throw new IllegalStateException("missing discovery-url configuration");
-    }
+    this.authorizationEndpoint = new URL((String) oidcDiscoveryConfig.get("authorization_endpoint"));
+    this.keySource = new RemoteJWKSet<>(new URL((String) oidcDiscoveryConfig.get("jwks_uri")));
 
-    this.authorizationEndpoint = (String) oidcDiscoveryConfig.get(AUTHORIZATION_ENDPOINT);
-    this.jwksUri = (String) oidcDiscoveryConfig.get(JWKS_URI);
+    logger.info("Loaded discovery data from {}", oidcConfig.getDiscoveryUrl());
   }
 
   @RequestMapping(method = GET)
   String handleLoginWithOidc(Map<String, Object> model) {
     model.put("authorizationEndpoint", authorizationEndpoint);
+    model.put("redirectUri", oidcConfig.getRedirectUri());
+    model.put("clientId", oidcConfig.getClientId());
     model.put("nonce", UUID.randomUUID());
     model.put("state", UUID.randomUUID());
-    model.put("clientId", oidcConfig.getClientId());
-    model.put("redirectUri", oidcConfig.getRedirectUri());
+
     return OIDC_TEMPLATE;
   }
 
   @RequestMapping(path = OIDC_RESPONSE, method = GET)
   String handleErrorWithOidc(Map<String, Object> model) {
     model.put("authorizationEndpoint", authorizationEndpoint);
-    model.put("error", true);
+    model.put("redirectUri", oidcConfig.getRedirectUri());
+    model.put("clientId", oidcConfig.getClientId());
     model.put("nonce", UUID.randomUUID());
     model.put("state", UUID.randomUUID());
-    model.put("clientId", oidcConfig.getClientId());
-    model.put("redirectUri", oidcConfig.getRedirectUri());
+    model.put("error", true);
+
     return OIDC_TEMPLATE;
   }
 
-  @SuppressWarnings("unchecked")
   @RequestMapping(path = OIDC_RESPONSE, method = POST)
   String handleOidcResponse(@RequestParam("id_token") String idToken, Map<String, Object> model)
-    throws ParseException, IOException, BadJOSEException, JOSEException {
+    throws ParseException, BadJOSEException, JOSEException {
 
-    SignedJWT token = SignedJWT.parse(idToken);
+    logger.info("id-token => {}", idToken);
 
-    JWSAlgorithm expectedAlgorithm = JWSAlgorithm.RS256;
-    JWKSource keySource = new RemoteJWKSet(new URL(jwksUri));
-    JWSKeySelector keySelector = new JWSVerificationKeySelector(expectedAlgorithm, keySource);
+    SignedJWT signedJWT = SignedJWT.parse(idToken);
 
-    ConfigurableJWTProcessor processor = new DefaultJWTProcessor();
+    JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(JWS_ALGORITHM, keySource);
+    ConfigurableJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();
+
     processor.setJWSKeySelector(keySelector);
 
-    JWTClaimsSet claimsSet = processor.process(token, null);
+    JWTClaimsSet claimsSet = processor.process(signedJWT, null);
 
-    // You should verify the token here
+    // verify the expected subject and or claims from the JWT for your purposes
+    //
+    // if the JWT is invalid or expired, one of the concrete exceptions will
+    // be thrown and we shall not get here
 
     model.put("claims", claimsSet.getClaims().entrySet());
     return SUCCESS_TEMPLATE;
