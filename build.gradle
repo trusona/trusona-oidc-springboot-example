@@ -3,12 +3,12 @@ version "1.0-SNAPSHOT"
 
 buildscript {
   ext {
-    springBootVersion = "2.1.6.RELEASE"
+    springBootVersion = "2.4.5"
   }
 
   repositories {
-    jcenter()
-    maven { url "http://repo.spring.io/plugins-release" }
+    mavenCentral()
+    maven { url "https://repo.spring.io/plugins-release" }
   }
 
   dependencies {
@@ -19,25 +19,22 @@ buildscript {
 apply plugin: "java"
 apply plugin: "org.springframework.boot"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
 
 repositories {
-  jcenter()
+  mavenCentral()
 }
 
 dependencies {
-  compile "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
-  compile "org.springframework.boot:spring-boot-starter-mustache:${springBootVersion}"
-  compile "com.nimbusds:nimbus-jose-jwt:7.3"
+  implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+  implementation "org.springframework.boot:spring-boot-starter-mustache:${springBootVersion}"
+  implementation "javax.validation:validation-api:2.0.1.Final"
+  implementation "com.nimbusds:nimbus-jose-jwt:9.9"
 }
 /*
 Trusona notes
 -------------
-To use the AP region, run with:
-
-./gradlew bootRun --args " --spring.profiles.active=ap"
-
 To use the EU region, run with:
 
 ./gradlew bootRun --args " --spring.profiles.active=eu"
