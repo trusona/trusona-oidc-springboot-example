@@ -1,1 +1,1 @@
-gradlew: ./gradlew bootRun --args " --spring.profiles.active=prod"
+gradlew: ./gradlew assemble bootRun --args " --spring.profiles.active=prod"
